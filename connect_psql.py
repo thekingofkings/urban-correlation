@@ -38,7 +38,6 @@ def retrieve_data_from_db_server():
 class Tweet:
     
     hist_hashtag = {}
-    tweets = []
     
     
     def __init__(self, timestamp, lon, lat, text):
@@ -48,11 +47,6 @@ class Tweet:
         self.lat = lat.strip()
         tags = re.findall("#\w+", text.strip())
         self.hashtag = [s.lower() for s in tags]
-        for s in self.hashtag:
-            if s in Tweet.hist_hashtag:
-                Tweet.hist_hashtag[s] += 1
-            else:
-                Tweet.hist_hashtag[s] = 1
         
     
     def __str__(self):
@@ -85,67 +79,89 @@ class Tweet:
         else:
             return False
     
-        
-    @classmethod
-    def readin_allTweets(cls, fname):
-        """read all tweets from given file"""
-        with open(fname, "r") as fin:
-            for line in fin:
-                ls = line.split(",", 3)
-                twt = Tweet(*ls)
-                cls.tweets.append(twt)
-                
-        return cls.tweets
-        
-        
-                
     
-    @classmethod
-    def top_k_hashtag(cls, k):
-        sorted_tuple = sorted(cls.hist_hashtag.items(), key=lambda x : x[1], reverse=True)
+    
+class TweetGroup:
+    
+    
+    
+    def __init__(self, tweets=[], fname=''):
+        """Build a tweet group from a list of tweets"""
+        self.tweets = tweets
+        if fname != '':
+            # read all tweets from given file
+            with open(fname, "r") as fin:
+                for line in fin:
+                    ls = line.split(",", 3)
+                    twt = Tweet(*ls)
+                    self.tweets.append(twt)
+        
+        # generate hash_tag_map
+        hashtag_map = {}
+        for t in self.tweets:
+            for s in t.hashtag:
+                if s in hashtag_map:
+                    hashtag_map[s] += 1
+                else:
+                    hashtag_map[s] = 1
+        self.hist_hashtag = hashtag_map
+        
+        
+
+    def top_k_hashtag(self, k):
+        sorted_tuple = sorted(self.hist_hashtag.items(), key=lambda x : x[1], reverse=True)
         poptags = {}
         for i in range(k):
            poptags[sorted_tuple[i][0]] = i
-        return poptags
+        return poptags, sorted_tuple[:k]
 
 
-
-    @classmethod
-    def aggregate_hash_tag(cls, fname, k):
-        cls.readin_allTweets(fname)
-        poptags = cls.top_k_hashtag(k)
-        return poptags
-
-
-    @classmethod
-    def filter_tweets_by_bbox(cls, bbox):
+    def filter_tweets_by_bbox(self, bbox):
         """filter tweets by bbox
         
         bbox = ( bottom-left, up-right )
         """
         res = []
-        for t in cls.tweets:
+        for t in self.tweets:
             if (t.inBbox(bbox)):
                 res.append(t)
-        return res
+        return TweetGroup(res)
 
     
     
+    def filter_tweets_by_hashtag(self, tags=[]):
+        """filter tweets by tags
+        
+        tags = [ a list of tags refering the same thing ]
+        """
+        res = []
+        
+        for t in self.tweets:
+            for tag in tags:
+                if tag in t.hashtag:
+                    res.append(t)
+            
+        return TweetGroup(res)
+                    
+        
     
 if __name__ == '__main__':
     
     
-    fname = "nyc-tweets-13"
-    Tweet.readin_allTweets("{0}.csv".format(fname))
-    jocobTs = Tweet.filter_tweets_by_bbox(location['jacob'])
-    tsTs = Tweet.filter_tweets_by_bbox(location['timesquare'])
-    msgTs = Tweet.filter_tweets_by_bbox(location['msg'])
+    fname = "nyc-tweets-12"
+    all_tweets = TweetGroup(fname="{0}.csv".format(fname))
+    jacobTwt = all_tweets.filter_tweets_by_bbox(location['jacob'])
+    tsTwt = all_tweets.filter_tweets_by_bbox(location['timesquare'])
+    msgTwt = all_tweets.filter_tweets_by_bbox(location['msg'])
     
     
-#    ht = Tweet.aggregate_hash_tag("{0}.csv".format(fname), 1000)
+    ht, sorted_ht = jacobTwt.top_k_hashtag(20)
+    nycc = jacobTwt.filter_tweets_by_hashtag(tags=["#nycc", "#nycomiccon", "#nycc2012"])
+    
+#    ht, ht_list = all_tweets.top_k_hashtag(1000)
         
 #    with open("{0}-poptag.csv".format(fname), "w") as fout:
-#        for twt in Tweet.tweets:
+#        for twt in all_tweets.tweets:
 #            twt.set_popular_tag(ht)
 #            fout.write(str(twt) + "\n")
             
