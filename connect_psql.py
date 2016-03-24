@@ -1,6 +1,6 @@
 import psycopg2
 import re
-
+from pre_processing_function import *
 
 
 def retrieve_data_from_db_server():
@@ -61,7 +61,45 @@ class Tweet:
         
         
         
+    def set_popular_tag(self, poptags):
+        """Find the most popular tag of current tweets"""
+        self.poptag = 1000000
+        for s in self.hashtag:
+            if s in poptags and poptags[s] < self.poptag:
+                self.poptag = poptags[s]
         
+        if self.poptag == 1000000:
+            self.poptag = -1
+            
+            
+            
+        
+    def toList(self):
+        return [date2linux_timestamp( self.timestamp[:14], "%Y%m%d%H%M%S" ), float(self.lon), float(self.lat), self.poptag ]
+        
+        
+    def inBbox(self, bbox):
+        if float(self.lon) <= bbox[1][0] and float(self.lon) >= bbox[0][0] \
+                and float(self.lat) <= bbox[1][1] and float(self.lat) >= bbox[0][0]:
+            return True
+        else:
+            return False
+    
+        
+    @classmethod
+    def readin_allTweets(cls, fname):
+        """read all tweets from given file"""
+        with open(fname, "r") as fin:
+            for line in fin:
+                ls = line.split(",", 3)
+                twt = Tweet(*ls)
+                cls.tweets.append(twt)
+                
+        return cls.tweets
+        
+        
+                
+    
     @classmethod
     def top_k_hashtag(cls, k):
         sorted_tuple = sorted(cls.hist_hashtag.items(), key=lambda x : x[1], reverse=True)
@@ -74,31 +112,23 @@ class Tweet:
 
     @classmethod
     def aggregate_hash_tag(cls, fname, k):
-        with open(fname, 'r') as fin:
-            for line in fin:
-                ls = line.split(",", 3)
-                twt = Tweet(*ls)
-                cls.tweets.append(twt)
-                
+        cls.readin_allTweets(fname)
         poptags = cls.top_k_hashtag(k)
         return poptags
 
 
-    def set_popular_tag(self, poptags):
-        """Find the most popular tag of current tweets"""
-        self.poptag = 1000000
-        for s in self.hashtag:
-            if s in poptags and poptags[s] < self.poptag:
-                self.poptag = poptags[s]
+    @classmethod
+    def filter_tweets_by_bbox(cls, bbox):
+        """filter tweets by bbox
         
-        if self.poptag == 1000000:
-            self.poptag = -1
+        bbox = ( bottom-left, up-right )
+        """
+        res = []
+        for t in cls.tweets:
+            if (t.inBbox(bbox)):
+                res.append(t)
+        return res
 
-
-
-
-
-    
     
     
     
@@ -106,9 +136,18 @@ if __name__ == '__main__':
     
     
     fname = "nyc-tweets-13"
-    ht = Tweet.aggregate_hash_tag("{0}.csv".format(fname), 1000)
+    Tweet.readin_allTweets("{0}.csv".format(fname))
+    jocobTs = Tweet.filter_tweets_by_bbox(location['jacob'])
+    tsTs = Tweet.filter_tweets_by_bbox(location['timesquare'])
+    msgTs = Tweet.filter_tweets_by_bbox(location['msg'])
+    
+    
+#    ht = Tweet.aggregate_hash_tag("{0}.csv".format(fname), 1000)
         
-    with open("{0}-poptag.csv".format(fname), "w") as fout:
-        for twt in Tweet.tweets:
-            twt.set_popular_tag(ht)
-            fout.write(str(twt) + "\n")
+#    with open("{0}-poptag.csv".format(fname), "w") as fout:
+#        for twt in Tweet.tweets:
+#            twt.set_popular_tag(ht)
+#            fout.write(str(twt) + "\n")
+            
+            
+    
