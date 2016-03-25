@@ -1,7 +1,11 @@
 import psycopg2
 import re
 from pre_processing_function import *
-from matplotlib.pyplot import plot, figure, title, legend
+from matplotlib import get_backend
+print get_backend()
+
+
+from matplotlib.pyplot import plot, figure, title, legend, show, savefig
 import numpy as np
 
 
@@ -12,7 +16,7 @@ def retrieve_data_from_db_server():
     
     
     # the lon, lat is in NYC, the text contains hashtag
-    cur.execute("""SELECT timestamp, lon, lat, text from usatweets where lat <= 40.87705 
+    cur.execute("""SELECT tweetid, timestamp, lon, lat, text from usatweets where lat <= 40.87705 
                 AND lat >= 40.698991 AND lon <= -73.917046 AND lon >= -74.020042 AND 
                 text ~* '.*#\w+.*'; """)
     
@@ -28,11 +32,11 @@ def retrieve_data_from_db_server():
                 cnt += 1
                 if cnt % 1000 == 0:
                     print cnt
-                t = str(row[0])
+                t = str(row[1])
                 if t[0:6] == "201210":
-                    fout12.write("{0}, {1}, {2}, {3}\n".format(*row))
+                    fout12.write("{0},{1},{2},{3},{4}\n".format(*row))
                 elif t[0:6] == "201306":
-                    fout13.write("{0}, {1}, {2}, {3}\n".format(*row))
+                    fout13.write("{0},{1},{2},{3},{4}\n".format(*row))
         
         
         
@@ -42,18 +46,19 @@ class Tweet:
     hist_hashtag = {}
     
     
-    def __init__(self, timestamp, lon, lat, text):
+    def __init__(self, tid, timestamp, lon, lat, text):
+        self.tid = int(tid)
         self.timestamp = timestamp
         self.timestamp += "0" * (17 - len(self.timestamp))    # fix all timestamp length as 17
-        self.lon = lon.strip()
-        self.lat = lat.strip()
+        self.lon = float(lon)
+        self.lat = float(lat)
         tags = re.findall("#\w+", text.strip())
         self.hashtag = [s.lower() for s in tags]
         
     
     def __str__(self):
         """override __str__ for output"""
-        return "{0},{1},{2},{3}".format(self.timestamp, self.lon, self.lat, self.poptag)
+        return "{0},{1},{2},{3},{4}".format(self.tid, self.timestamp, self.lon, self.lat, self.poptag)
         
         
         
@@ -75,7 +80,7 @@ class Tweet:
             
         
     def toList(self):
-        return [date2linux_timestamp( self.timestamp[:14], "%Y%m%d%H%M%S" ), float(self.lon), float(self.lat), self.poptag ]
+        return [date2linux_timestamp( self.timestamp[:14], "%Y%m%d%H%M%S" ), self.lon, self.lat, self.poptag ]
         
         
     def inBbox(self, bbox):
@@ -98,7 +103,7 @@ class TweetGroup:
             # read all tweets from given file
             with open(fname, "r") as fin:
                 for line in fin:
-                    ls = line.split(",", 3)
+                    ls = line.split(",", 4)
                     twt = Tweet(*ls)
                     self.tweets.append(twt)
         
@@ -187,25 +192,32 @@ def case(twtG, tags=[]):
     
 if __name__ == '__main__':
     
+    task = "1query_data"
     
-    fname = "nyc-tweets-12"
-    all_tweets = TweetGroup(fname="{0}.csv".format(fname))
-    jacobTwt = all_tweets.filter_tweets_by_bbox(location['jacob'])
-    tsTwt = all_tweets.filter_tweets_by_bbox(location['timesquare'])
-    msgTwt = all_tweets.filter_tweets_by_bbox(location['msg'])
-    
-    
-    
-    r = case(jacobTwt, ["#nycc", "#nycomiccon", "#nycc2012"])
-    
-    import pickle
-    traff = pickle.load(open("taxi_tsjacob.pickle", "rU"))
-    tpick = traff["taxi_pick_"]
-    tdrop = traff["taxi_drop_"]
-    plot(tpick, "r-")
-    plot(tdrop, "g:")
-    title("Jacob center - pickup - dropoff - #nycc")
-    legend(("#nycc", "Pickup", "Dropoff"))
+    if task == "query_data":
+        retrieve_data_from_db_server()
+    else:
+        fname = "nyc-tweets-12"
+        all_tweets = TweetGroup(fname="{0}.csv".format(fname))
+        jacobTwt = all_tweets.filter_tweets_by_bbox(location['jacob'])
+        tsTwt = all_tweets.filter_tweets_by_bbox(location['timesquare'])
+        msgTwt = all_tweets.filter_tweets_by_bbox(location['msg'])
+        
+        
+        
+        r = case(jacobTwt, ["#nycc", "#nycomiccon", "#nycc2012"])
+        
+        import pickle
+        traff = pickle.load(open("taxi_tsjacob.pickle", "rU"))
+        tpick = traff["taxi_pick_"]
+        tdrop = traff["taxi_drop_"]
+        plot(tpick, "r-")
+        plot(tdrop, "g:")
+        title("Jacob center - pickup - dropoff - #nycc")
+        legend(("#nycc", "Pickup", "Dropoff"))
+        show()
+        savefig("jacob-small-box.pdf", format="pdf")
+
     
     
 #    r2 = case(msgTwt, ["#cmj"])
