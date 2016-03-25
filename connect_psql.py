@@ -1,6 +1,8 @@
 import psycopg2
 import re
 from pre_processing_function import *
+from matplotlib.pyplot import plot, figure, title, legend
+import numpy as np
 
 
 def retrieve_data_from_db_server():
@@ -65,6 +67,10 @@ class Tweet:
         if self.poptag == 1000000:
             self.poptag = -1
             
+            
+            
+    def get_timestamp(self):
+        return date2linux_timestamp( self.timestamp[:14], "%Y%m%d%H%M%S" )
             
             
         
@@ -142,8 +148,42 @@ class TweetGroup:
                     res.append(t)
             
         return TweetGroup(res)
-                    
         
+        
+    
+    def generate_timeSeries(self):
+        """ generate a tweet count time series """
+        TS = []
+        for twt in self.tweets:
+            TS.append(twt.get_timestamp())
+        
+        n, bins = np.histogram(TS, bins=24*31)
+        return n
+
+
+
+
+def case(twtG, tags=[]):
+    """Tweet tags in one tweetGroup
+    
+    Known pair: 
+    
+    1) nycc@jacob center
+    twtG = jacobTwt
+    tags = ["#nycc", "#nycomiccon", "#nycc2012"]
+    
+    2) cmj@MSG
+    twtG = msgTwt
+    tags = ["#cmj"]
+    """
+    ht, sortht = twtG.top_k_hashtag(20)
+    caseTwt = twtG.filter_tweets_by_hashtag(tags=tags)
+    ts = caseTwt.generate_timeSeries()
+    figure()
+    plot(ts)
+    return ts
+    
+
     
 if __name__ == '__main__':
     
@@ -155,8 +195,30 @@ if __name__ == '__main__':
     msgTwt = all_tweets.filter_tweets_by_bbox(location['msg'])
     
     
-    ht, sorted_ht = jacobTwt.top_k_hashtag(20)
-    nycc = jacobTwt.filter_tweets_by_hashtag(tags=["#nycc", "#nycomiccon", "#nycc2012"])
+    
+    r = case(jacobTwt, ["#nycc", "#nycomiccon", "#nycc2012"])
+    
+    import pickle
+    traff = pickle.load(open("taxi_tsjacob.pickle", "rU"))
+    tpick = traff["taxi_pick_"]
+    tdrop = traff["taxi_drop_"]
+    plot(tpick, "r-")
+    plot(tdrop, "g:")
+    title("Jacob center - pickup - dropoff - #nycc")
+    legend(("#nycc", "Pickup", "Dropoff"))
+    
+    
+#    r2 = case(msgTwt, ["#cmj"])
+    
+#    r3 = case(tsTwt, ["#pivotcon"])
+    
+#    case(msgTwt, ["#cmj"])
+#    case(jacobTwt, ["#cmj"])
+    
+
+    
+    
+    
     
 #    ht, ht_list = all_tweets.top_k_hashtag(1000)
         
