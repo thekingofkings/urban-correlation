@@ -52,13 +52,14 @@ class Tweet:
         self.timestamp += "0" * (17 - len(self.timestamp))    # fix all timestamp length as 17
         self.lon = float(lon)
         self.lat = float(lat)
-        tags = re.findall("#\w+", text.strip())
+        self.text = text.strip()
+        tags = re.findall("#\w+", self.text)
         self.hashtag = [s.lower() for s in tags]
         
     
     def __str__(self):
         """override __str__ for output"""
-        return "{0},{1},{2},{3},{4}".format(self.tid, self.timestamp, self.lon, self.lat, self.poptag)
+        return "{0},{1},{2},{3},{4}".format(self.tid, self.timestamp, self.lon, self.lat, self.text)
         
         
         
@@ -151,6 +152,7 @@ class TweetGroup:
             for tag in tags:
                 if tag in t.hashtag:
                     res.append(t)
+                    break
             
         return TweetGroup(res)
         
@@ -158,14 +160,48 @@ class TweetGroup:
     
     def generate_timeSeries(self):
         """ generate a tweet count time series """
-        TS = []
+        TS = {}
         for twt in self.tweets:
-            TS.append(twt.get_timestamp())
-        
-        n, bins = np.histogram(TS, bins=24*31)
+            k = twt.timestamp[:10]
+            if k in TS:
+                TS[k] += 1
+            else:
+                TS[k] = 1
+                
+        n = []
+        for day in range(1, 32):
+            for hour in range(24):
+                k = '201210{0:02d}{1:02d}'.format(day, hour)
+                if k in TS:
+                    n.append(TS[k])
+                else:
+                    n.append(0)
         return n
 
-
+    
+    
+    def filter_tweets_by_timeWindow(self, start_prefix, end_prefix):
+        """filter tweets by time window
+        
+        the timestamp is a string of length 17.
+        The start_prefix and end_prefix give the timestamp range"""
+        start_ = start_prefix + "0" * (17 - len(start_prefix))
+        end_ = end_prefix + "0" * (17 - len(end_prefix))
+        
+        res = []
+        for twt in self.tweets:
+            if twt.timestamp >= start_ and twt.timestamp <= end_:
+                res.append(twt)
+                
+        return TweetGroup(res)
+        
+        
+    def saveToFile(self, fname):
+        with open(fname, 'w') as fout:
+            for t in self.tweets:
+                fout.write(str(t) + "\n")
+        
+        
 
 
 def case(twtG, tags=[]):
@@ -186,19 +222,19 @@ def case(twtG, tags=[]):
     ts = caseTwt.generate_timeSeries()
     figure()
     plot(ts)
-    return ts
+    return ts, caseTwt
     
 
     
 if __name__ == '__main__':
     
-    task = "1query_data"
+    task = "after_query_data"
     
     if task == "query_data":
         retrieve_data_from_db_server()
     else:
         fname = "nyc-tweets-12"
-        all_tweets = TweetGroup(fname="{0}.csv".format(fname))
+        all_tweets = TweetGroup(fname="{0}.csv".format(fname))        
         jacobTwt = all_tweets.filter_tweets_by_bbox(location['jacob'])
         tsTwt = all_tweets.filter_tweets_by_bbox(location['timesquare'])
         msgTwt = all_tweets.filter_tweets_by_bbox(location['msg'])
@@ -206,6 +242,9 @@ if __name__ == '__main__':
         
         
         r = case(jacobTwt, ["#nycc", "#nycomiccon", "#nycc2012"])
+        
+        nyccTwt = r[1]
+        t = nyccTwt.filter_tweets_by_timeWindow("20121015", "20121020")
         
         import pickle
         traff = pickle.load(open("taxi_tsjacob.pickle", "rU"))
@@ -215,9 +254,8 @@ if __name__ == '__main__':
         plot(tdrop, "g:")
         title("Jacob center - pickup - dropoff - #nycc")
         legend(("#nycc", "Pickup", "Dropoff"))
-        show()
         savefig("jacob-small-box.pdf", format="pdf")
-
+        
     
     
 #    r2 = case(msgTwt, ["#cmj"])
