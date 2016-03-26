@@ -5,7 +5,7 @@ from matplotlib import get_backend
 print get_backend()
 
 
-from matplotlib.pyplot import plot, figure, title, legend, show, savefig
+from matplotlib.pyplot import *
 import numpy as np
 
 
@@ -220,8 +220,26 @@ def case(twtG, tags=[]):
     ht, sortht = twtG.top_k_hashtag(20)
     caseTwt = twtG.filter_tweets_by_hashtag(tags=tags)
     ts = caseTwt.generate_timeSeries()
-    figure()
-    plot(ts)
+
+    figure(figsize=(15,5))
+    plot(ts[120:384], 'b-', linewidth=3)
+    import pickle
+    traff = pickle.load(open("taxi_tsjacob.pickle", "rU"))
+    tpick = traff["taxi_pick_"]
+    tdrop = traff["taxi_drop_"]
+    plot(tpick[120:384], "r-", linewidth=3)
+    plot(tdrop[120:384], "g-", linewidth=3)
+    axvline(252 - 120, color='black', ls=':', lw=3)
+    axvline(276 - 120, color='black', ls=':', lw=3)
+    axvline(300 - 120, color='black', ls=':', lw=3)
+    axvline(324 - 120, color='black', ls=':', lw=3)
+    #title("Jacob center - pickup - dropoff - #nycc")
+    xticks( range(12, 265, 24), ["10/{0:02d}".format(i) for i in range(6, 20, 1)] )
+    xlim(0, 264)
+    ylabel("Count of traffic and tweets", fontsize=16)
+    xlabel("Dates in 2012", fontsize=16)
+    legend(("#nycc", "Pickup", "Dropoff"), loc=2)
+    savefig("jacob-small-box.png", format="png")
     return ts, caseTwt
     
 
@@ -243,18 +261,11 @@ if __name__ == '__main__':
         
         r = case(jacobTwt, ["#nycc", "#nycomiccon", "#nycc2012"])
         
-        nyccTwt = r[1]
-        t = nyccTwt.filter_tweets_by_timeWindow("20121015", "20121020")
+        # nyccTwt = r[1]
+        # t = jacobTwt.filter_tweets_by_timeWindow("20121019", "20121019235959")
+        # t.saveToFile("2012-10-19")
+        # print t.top_k_hashtag(20)[1]
         
-        import pickle
-        traff = pickle.load(open("taxi_tsjacob.pickle", "rU"))
-        tpick = traff["taxi_pick_"]
-        tdrop = traff["taxi_drop_"]
-        plot(tpick, "r-")
-        plot(tdrop, "g:")
-        title("Jacob center - pickup - dropoff - #nycc")
-        legend(("#nycc", "Pickup", "Dropoff"))
-        savefig("jacob-small-box.pdf", format="pdf")
         
     
     
