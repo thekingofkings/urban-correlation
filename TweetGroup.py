@@ -95,6 +95,16 @@ class TweetGroup:
                 else:
                     n.append(0)
         return n
+        
+        
+    
+    def count_hashtag(self, tag):
+        """ count how many tweets contain the given hashtag """
+        cnt = 0
+        for twt in self.tweets:
+            if tag in twt.hashtag:
+                cnt += 1
+        return cnt
 
     
     
@@ -118,4 +128,21 @@ class TweetGroup:
         with open(fname, 'w') as fout:
             for t in self.tweets:
                 fout.write(str(t) + "\n")
+                
+                
+    def split_tweets_byDay(self):
+        """ split tweets by day """
+        splits = {}
+        for twt in self.tweets:
+            k = twt.timestamp[:8]
+            if k in splits:
+                splits[k].append(twt)
+            else:
+                splits[k] = [twt]
+        
+        self.splits = {}
+        for k in splits:
+            self.splits[k] = TweetGroup(splits[k])
+        return self.splits
+                
         

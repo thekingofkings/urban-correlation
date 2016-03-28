@@ -7,6 +7,14 @@ all tweets related case in NYC
 
 case 1:
     NYCC (new york comic con) in Jacob center
+    
+    1) nycc@jacob center
+    twtG = jacobTwt
+    tags = ["#nycc", "#nycomiccon", "#nycc2012"]
+
+    2) cmj@MSG
+    twtG = msgTwt
+    tags = ["#cmj"]
 """
 
 
@@ -15,42 +23,73 @@ case 1:
 from matplotlib.pyplot import *
 from TweetGroup import TweetGroup
 from pre_processing_function import location
+import pickle
+from math import log
 
 
 
 
-def case(twtG, tags=[]):
-    """Tweet tags in one tweetGroup
+def hashtag_measure( subTwtGrp, allTwtGrp, hashtags):
+    """Measure for hashtag
     
-    Known pair: 
+    Input:
+    1) subTwtGrp - the tweets of focal region
+    2) allTwtGrp - all tweets in NYC
+    3) hashtags - a list of hashtags that we use for calculating measure
     
-    1) nycc@jacob center
-    twtG = jacobTwt
-    tags = ["#nycc", "#nycomiccon", "#nycc2012"]
-    
-    2) cmj@MSG
-    twtG = msgTwt
-    tags = ["#cmj"]
-    
-    return value: time series of the tweets (by hour)
+    Output:
+    some measure
     """
-    ht, sortht = twtG.top_k_hashtag(20)
-    caseTwt = twtG.filter_tweets_by_hashtag(tags=tags)
-    ts = caseTwt.generate_timeSeries()
+    idf = calc_idf(allTwtGrp, hashtags)
+    print "============ another day =================="
+    ttn = len(subTwtGrp.tweets)
+    ratio = 0.0
+    for tag in hashtags:
+        cnt_sub = subTwtGrp.count_hashtag(tag)
+#        cnt_all = allTwtGrp.count_hashtag(tag)
+#        ratio += cnt_sub / float(cnt_all)
+
+#        ratio += cnt_sub
+        
+        ratio += cnt_sub * idf[tag] / float(ttn)
+        print tag, cnt_sub / float(ttn), idf[tag], cnt_sub * idf[tag] / float(ttn)
+        
+    return ratio #* len(subTwtGrp.tweets)
+#    return len(subTwtGrp.tweets)
+        
+
+
+
+
+def calc_idf(twtGrp, hashtags):
+    df_cnt = {}
+    for tag in hashtags:
+        df_cnt[tag] = set()
+        for twt in twtGrp.tweets:
+            gridk = twt.location_key()
+            if tag in twt.hashtag and gridk not in df_cnt[tag]:
+                df_cnt[tag].add(gridk)
+                
+    idf = {}
+    for tag in hashtags:
+        tmp = log(10000.0 / len(df_cnt[tag]))
+        idf[tag] = tmp if tmp > 5 else 0
     
-    return ts
-    
-    
+    return idf
+
+
+
     
 def plot_nycc_2012_jacob_case(jacobTwt):
     
     # get the time series of tweets with "nycc" related tag
-    ts = case(jacobTwt, ["#nycc", "#nycomiccon", "#nycc2012"])
+    tagTwt = jacobTwt.filter_tweets_by_hashtag(["#nycc", "#nycomiccon", "#nycc2012"])
+    ts = tagTwt.generate_timeSeries()
 
     # plot
     figure(figsize=(15,5))
     plot(ts[120:384], 'b-', linewidth=3)
-    import pickle
+    
     traff = pickle.load(open("taxi_tsjacob.pickle", "rU"))
     tpick = traff["taxi_pick_"]
     tdrop = traff["taxi_drop_"]
@@ -71,22 +110,69 @@ def plot_nycc_2012_jacob_case(jacobTwt):
     
     
     
+
+def merge_taxi_count_into_day():
+    traff = pickle.load(open("taxi_tsjacob.pickle", "rU"))
     
+    tpick = traff["taxi_pick_"]
+    tdrop = traff["taxi_drop_"]
     
+    dpick = []
+    ddrop = []
+    
+    for i in range(31):
+        dpick.append(sum(tpick[i*24:i*24+24]))
+        ddrop.append(sum(tdrop[i*24:i*24+24]))
+        
+    return dpick, ddrop
 
 
 if __name__ == '__main__':
     
 
     fname = "nyc-tweets-12"
-    all_tweets = TweetGroup(fname="{0}.csv".format(fname))        
+    all_tweets = TweetGroup(fname="{0}.csv".format(fname))
+    
+    all_dmap = all_tweets.split_tweets_byDay()
+    
+    
+    
     jacobTwt = all_tweets.filter_tweets_by_bbox(location['jacob'])
     tsTwt = all_tweets.filter_tweets_by_bbox(location['timesquare'])
     msgTwt = all_tweets.filter_tweets_by_bbox(location['msg'])
         
         
-    plot_nycc_2012_jacob_case(jacobTwt)
+#    plot_nycc_2012_jacob_case(jacobTwt)
+        
+    dmap = jacobTwt.split_tweets_byDay()
+    sortedKey = dmap.keys()
+    sortedKey.sort()
     
+    
+    ratio = []
+    for k in sortedKey:
+        hashtags = dmap[k].top_k_hashtag(20)[0].keys()
+        ratio.append(hashtag_measure(dmap[k], all_dmap[k], hashtags))
+        
+        
+    traff = merge_taxi_count_into_day()
+    
+    f,ax1 = subplots()
+    ax1.plot(ratio)
+    ax1.set_ylabel("Hashtag measure")
+    legend(("hashtag",), loc=2)
+    for tl in ax1.get_yticklabels():
+        tl.set_color('b')
+    
+    ax2 = ax1.twinx()
+    ax2.plot(traff[0], "r--")
+    ax2.plot(traff[1], "g:")
+    ax1.set_ylabel("Traffic count")
+    for tl in ax2.get_yticklabels():
+        tl.set_color('r')
+    legend(("Pickup", "Dropoff"), loc=1)
+    
+    savefig("tweets-tag-tfidf-traffic.pdf")
     
     # nyccTwt = r[1]
     # t = jacobTwt.filter_tweets_by_timeWindow("20121019", "20121019235959")

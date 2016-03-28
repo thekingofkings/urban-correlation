@@ -61,3 +61,7 @@ class Tweet:
             return True
         else:
             return False
+            
+            
+    def location_key(self):
+        return "{0:0.3f}{1:0.3f}".format(self.lon, self.lat)
