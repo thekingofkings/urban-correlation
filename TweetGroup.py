@@ -22,7 +22,7 @@ class TweetGroup:
             # read all tweets from given file
             with open(fname, "r") as fin:
                 for line in fin:
-                    ls = line.split(",", 4)
+                    ls = line.split(",", 5)
                     twt = Tweet(*ls)
                     self.tweets.append(twt)
         
@@ -76,26 +76,54 @@ class TweetGroup:
         
         
     
-    def generate_timeSeries(self):
-        """ generate a tweet count time series """
-        TS = {}
-        for twt in self.tweets:
-            k = twt.timestamp[:10]
-            if k in TS:
-                TS[k] += 1
-            else:
-                TS[k] = 1
-                
-        n = []
-        for day in range(1, 32):
-            for hour in range(24):
-                k = '201210{0:02d}{1:02d}'.format(day, hour)
-                if k in TS:
-                    n.append(TS[k])
-                else:
-                    n.append(0)
-        return n
+    def generate_timeSeries(self, tstype="tweets"):
+        """ generate a count time series 
         
+        Input:
+        tstype -- the type of time series, takes value
+            "tweets" or "users"
+        """
+        if tstype == "tweets":
+            TS = {}
+            for twt in self.tweets:
+                k = twt.timestamp[:10]
+                if k in TS:
+                    TS[k] += 1
+                else:
+                    TS[k] = 1
+                    
+            n = []
+            for day in range(1, 32):
+                for hour in range(24):
+                    k = '201210{0:02d}{1:02d}'.format(day, hour)
+                    if k in TS:
+                        n.append(TS[k])
+                    else:
+                        n.append(0)
+            return n
+        elif tstype == "users":
+            TS = {}
+            for twt in self.tweets:
+                k = twt.timestamp[:10]
+                if k in TS:
+                    if twt.uid not in TS[k]:
+                        TS[k].add(twt.uid)
+                else:
+                    TS[k] = set()
+                    TS[k].add(twt.uid)
+            
+            n = []
+            for day in range(1, 32):
+                for hour in range(24):
+                    k = '201210{0:02d}{1:02d}'.format(day, hour)
+                    if k in TS:
+                        n.append(len(TS[k]))
+                    else:
+                        n.append(0)
+            return n
+            
+            
+            
         
     
     def count_hashtag(self, tag):

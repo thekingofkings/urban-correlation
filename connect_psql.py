@@ -17,7 +17,7 @@ def retrieve_data_from_db_server():
     
     
     # the lon, lat is in NYC, the text contains hashtag
-    cur.execute("""SELECT tweetid, timestamp, lon, lat, text from usatweets where lat <= 40.87705 
+    cur.execute("""SELECT tweetid, userid, timestamp, lon, lat, text from usatweets where lat <= 40.87705 
                 AND lat >= 40.698991 AND lon <= -73.917046 AND lon >= -74.020042 AND 
                 text ~* '.*#\w+.*'; """)
     
@@ -35,9 +35,9 @@ def retrieve_data_from_db_server():
                     print cnt
                 t = str(row[1])
                 if t[0:6] == "201210":
-                    fout12.write("{0},{1},{2},{3},{4}\n".format(*row))
+                    fout12.write("{0},{1},{2},{3},{4},{5}\n".format(*row))
                 elif t[0:6] == "201306":
-                    fout13.write("{0},{1},{2},{3},{4}\n".format(*row))
+                    fout13.write("{0},{1},{2},{3},{4},{5}\n".format(*row))
         
 
 

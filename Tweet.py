@@ -17,8 +17,9 @@ class Tweet:
     hist_hashtag = {}
     
     
-    def __init__(self, tid, timestamp, lon, lat, text):
+    def __init__(self, tid, uid, timestamp, lon, lat, text):
         self.tid = int(tid)
+        self.uid = int(uid)
         self.timestamp = timestamp
         self.timestamp += "0" * (17 - len(self.timestamp))    # fix all timestamp length as 17
         self.lon = float(lon)
@@ -30,7 +31,7 @@ class Tweet:
     
     def __str__(self):
         """override __str__ for output"""
-        return "{0},{1},{2},{3},{4}".format(self.tid, self.timestamp, self.lon, self.lat, self.text)
+        return "{0},{1},{2},{3},{4},{5}".format(self.tid, self.uid, self.timestamp, self.lon, self.lat, self.text)
         
         
         
