@@ -33,7 +33,7 @@ def retrieve_data_from_db_server():
                 cnt += 1
                 if cnt % 1000 == 0:
                     print cnt
-                t = str(row[1])
+                t = str(row[2])     # row[2] is the timestamp
                 if t[0:6] == "201210":
                     fout12.write("{0},{1},{2},{3},{4},{5}\n".format(*row))
                 elif t[0:6] == "201306":

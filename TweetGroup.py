@@ -126,13 +126,31 @@ class TweetGroup:
             
         
     
-    def count_hashtag(self, tag):
+    def count_hashtag(self, tag, byUser=False):
         """ count how many tweets contain the given hashtag """
-        cnt = 0
+        if not byUser:    
+            cnt = 0
+            for twt in self.tweets:
+                if tag in twt.hashtag:
+                    cnt += 1
+            return cnt
+        else:
+            users = set()
+            for twt in self.tweets:
+                if twt.uid not in users:
+                    users.add(twt.uid)
+            return len(users)
+        
+        
+        
+    def count_unique_user(self):
+        """ count number of unique users """
+        uc = set()
         for twt in self.tweets:
-            if tag in twt.hashtag:
-                cnt += 1
-        return cnt
+            if twt.uid not in uc:
+                uc.add(twt.uid)
+        
+        return len(uc)
 
     
     
