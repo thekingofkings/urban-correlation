@@ -29,34 +29,53 @@ from math import log
 
 
 
-def hashtag_measure( subTwtGrp, allTwtGrp, hashtags):
+def hashtag_measure( subTwtGrp, allTwtGrp, hashtags, measure="tweetCount"):
     """Measure for hashtag
     
     Input:
     1) subTwtGrp - the tweets of focal region
     2) allTwtGrp - all tweets in NYC
     3) hashtags - a list of hashtags that we use for calculating measure
+    4) measure - could be the following
+        a. tweetCount
+        b. uniqueUserCount
+        c. top#-tf
+        d. top#-tfidf
+        e. top#-tf-byuser
+        f. top#-relaCnt
     
     Output:
     some measure
     """
-    idf = calc_idf(allTwtGrp, hashtags)
-    print "============ another day =================="
-    ttn = len(subTwtGrp.tweets)
-    ratio = 0.0
-    for tag in hashtags:
-        cnt_sub = subTwtGrp.count_hashtag(tag)
-#        cnt_all = allTwtGrp.count_hashtag(tag)
-#        ratio += cnt_sub / float(cnt_all)
-
-#        ratio += cnt_sub
-        
-        ratio += cnt_sub * idf[tag] / float(ttn)
-        print tag, cnt_sub / float(ttn), idf[tag], cnt_sub * idf[tag] / float(ttn)
-        
-    return ratio #* len(subTwtGrp.tweets)
-#    return len(subTwtGrp.tweets)
-        
+    if measure == "uniqueUserCount":
+        return subTwtGrp.count_unique_user()
+    elif measure == "tweetCount":
+        return len(subTwtGrp.tweets)
+    elif measure == "top#-tf":
+        ratio = 0.0
+        for tag in hashtags:
+            ratio += subTwtGrp.count_hashtag(tag)
+        return ratio
+    elif measure == "top#-tfidf":
+        idf = calc_idf(allTwtGrp, hashtags)
+        ratio = 0.0
+        for tag in hashtags:
+            cnt_sub = subTwtGrp.count_hashtag(tag)
+            ratio += cnt_sub * idf[tag]
+        return ratio
+    elif measure == "top#-tf-byuser":
+        ratio = 0.0
+        for tag in hashtags:
+            ratio += subTwtGrp.count_hashtag(tag, byUser=True)
+        return ratio
+    elif measure == "top#-relaCnt":
+        ratio = 0.0
+        for tag in hashtags:
+            cnt_sub = subTwtGrp.count_hashtag(tag)
+            cnt_all = allTwtGrp.count_hashtag(tag)
+            ratio += cnt_sub / float(cnt_all)
+        return ratio
+      
 
 
 
@@ -167,12 +186,12 @@ if __name__ == '__main__':
     ax2 = ax1.twinx()
     ax2.plot(traff[0], "r--")
     ax2.plot(traff[1], "g:")
-    ax1.set_ylabel("Traffic count")
+    ax2.set_ylabel("Traffic count")
     for tl in ax2.get_yticklabels():
         tl.set_color('r')
     legend(("Pickup", "Dropoff"), loc=1)
     
-    savefig("tweets-tag-tfidf-traffic.pdf")
+    savefig("tweets-user-count-traffic.pdf")
     
     # nyccTwt = r[1]
     # t = jacobTwt.filter_tweets_by_timeWindow("20121019", "20121019235959")
