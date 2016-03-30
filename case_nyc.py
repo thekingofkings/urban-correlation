@@ -209,7 +209,7 @@ def find_tweets_measure_toMatch_traffic():
 #    case(jacobTwt, ["#cmj"])
     
 
-    
+
     
     
     
@@ -223,9 +223,39 @@ def find_tweets_measure_toMatch_traffic():
             
     
 
+def get_userCnt_TS():
+    
+    fname = "nyc-tweets-12"
+    tmp_tweets = TweetGroup(fname="data/{0}.csv".format(fname))
+    tmp_len = len(tmp_tweets)
+    all_tweets = TweetGroup(tweets=tmp_tweets.tweets, fname="data/nyc-tweets-1211.csv")
+    assert len(all_tweets) > tmp_len
+    
+    
+    jacobTwt = all_tweets.filter_tweets_by_bbox(location['jacob'])
+    tsTwt = all_tweets.filter_tweets_by_bbox(location['timesquare'])
+    msgTwt = all_tweets.filter_tweets_by_bbox(location['msg'])
+    E58Twt = all_tweets.filter_tweets_by_bbox(location['58E'])
+    
+    
+    t1 = jacobTwt.generate_timeSeries(tstype="users")
+    t2 = tsTwt.generate_timeSeries("users")
+    t3 = msgTwt.generate_timeSeries("users")
+    t4 = E58Twt.generate_timeSeries("users")
+    
+    with open("data/nyc-tweets-ts-201210-11.pickle", 'w') as fout:
+        pickle.dump(t1, fout)
+        pickle.dump(t2, fout)
+        pickle.dump(t3, fout)
+        pickle.dump(t4, fout)
+    
+    
+    
 
 
 if __name__ == '__main__':
     
-    find_tweets_measure_toMatch_traffic()
+#    find_tweets_measure_toMatch_traffic()
+    
+    get_userCnt_TS()
     

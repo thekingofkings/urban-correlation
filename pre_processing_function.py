@@ -20,7 +20,7 @@ location = {}
 location['jacob']      = (np.array([-74.0014117956, 40.7574610417]),np.array([-73.9997595549,40.7587369494])) #small box
 location['timesquare'] = (np.array([-73.986483,40.759139]),np.array([-73.979144,40.763934]))
 location['msg']        = (np.array([-73.996235,40.7482]),np.array([-73.990173,40.75213]))
-# *location['58E']        = (np.array([-73.9733,40.756792]),np.array([-73.956922,40.764575]))
+location['58E']        = (np.array([-73.9733,40.756792]),np.array([-73.956922,40.764575]))
 # *location['59E']        = (np.array([-73.97566,40.761398]),np.array([-73.968329,40.76555]))
 # *location['mahattan']   = (np.array([-74.038646,40.69005]),np.array([-73.888142,40.902056]))
 

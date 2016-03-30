@@ -22,7 +22,7 @@ def retrieve_data_from_db_server():
                 text ~* '.*#\w+.*'; """)
     
     cnt = 0
-    with open("data/nyc-tweets-12.csv", "w") as fout12, open("data/nyc-tweets-13.csv", "w") as fout13:            
+    with open("data/nyc-tweets-1211.csv", "w") as fout12, open("data/nyc-tweets-1307.csv", "w") as fout13:            
         while True:
             res = cur.fetchmany(100)
             if not res:
@@ -34,9 +34,9 @@ def retrieve_data_from_db_server():
                 if cnt % 1000 == 0:
                     print cnt
                 t = str(row[2])     # row[2] is the timestamp
-                if t[0:6] == "201210":
+                if t[0:6] == "201211":
                     fout12.write("{0},{1},{2},{3},{4},{5}\n".format(*row))
-                elif t[0:6] == "201306":
+                elif t[0:6] == "201307":
                     fout13.write("{0},{1},{2},{3},{4},{5}\n".format(*row))
         
 

@@ -75,21 +75,23 @@ def visualize_special_case( nta_pickups, nta_dropoffs, ntas=["MN32", "MN17"] ):
     times = nta_pickups[ntas[0]].keys()
     sorted_time = sorted(times)
     
-    plt.figure(figsize=(16,6))
+    plt.figure(figsize=(8,12))
     
     n = len(ntas)
     for i in range(n):
-        f = plt.subplot(1,n,i)
+        f = plt.subplot(n,1,i)
         
         pkps = [nta_pickups[ntas[i]][T] for T in sorted_time]
         plt.plot(pkps, "r-", lw=4)
         
         dpfs = [nta_dropoffs[ntas[i]][T] for T in sorted_time]
         plt.plot(dpfs, "b--", lw=4)
+        plt.xlim((0,24))
+        plt.xticks(range(0,25,6))
         
         plt.legend(["Pickup", "Drop-off"], fontsize=18, loc='best')
         plt.xlabel("Hour of Monday 12/10/2012", fontsize=18)
-        plt.ylabel("Traffic count of NTA #{0}".format(ntas[i]), fontsize=18)
+        plt.ylabel("Traffic count of #{0}".format(ntas[i]), fontsize=18)
         f.tick_params(axis='both', which='major', labelsize=16)
         f.tick_params(axis='both', which='minor', labelsize=12)
         
@@ -100,9 +102,9 @@ def visualize_special_case( nta_pickups, nta_dropoffs, ntas=["MN32", "MN17"] ):
 
 if __name__ == "__main__":
     
-    
-#    nta_pickups = generate_taxi_trip_time_seiries("data/2012-12-10-pick.csv")
-#    nta_dropoffs = generate_taxi_trip_time_seiries("data/2012-12-10-drop.csv")
+    # takes several minutes to run
+    nta_pickups = generate_taxi_trip_time_seiries("data/2012-12-10-pick.csv")
+    nta_dropoffs = generate_taxi_trip_time_seiries("data/2012-12-10-drop.csv")
     
     visualize_all_TS(nta_pickups, nta_dropoffs)
     visualize_special_case(nta_pickups, nta_dropoffs)

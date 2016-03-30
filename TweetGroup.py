@@ -37,6 +37,12 @@ class TweetGroup:
         self.hist_hashtag = hashtag_map
         
         
+        
+    def __len__(self):
+        """override length function"""
+        return len(self.tweets)
+
+
 
     def top_k_hashtag(self, k):
         sorted_tuple = sorted(self.hist_hashtag.items(), key=lambda x : x[1], reverse=True)
@@ -93,13 +99,14 @@ class TweetGroup:
                     TS[k] = 1
                     
             n = []
-            for day in range(1, 32):
-                for hour in range(24):
-                    k = '201210{0:02d}{1:02d}'.format(day, hour)
-                    if k in TS:
-                        n.append(TS[k])
-                    else:
-                        n.append(0)
+            for month in range(10,12):
+                for day in range(1, 32):
+                    for hour in range(24):
+                        k = '2012{0:02d}{1:02d}{2:02d}'.format(month, day, hour)
+                        if k in TS:
+                            n.append(TS[k])
+                        else:
+                            n.append(0)
             return n
         elif tstype == "users":
             TS = {}
@@ -113,13 +120,14 @@ class TweetGroup:
                     TS[k].add(twt.uid)
             
             n = []
-            for day in range(1, 32):
-                for hour in range(24):
-                    k = '201210{0:02d}{1:02d}'.format(day, hour)
-                    if k in TS:
-                        n.append(len(TS[k]))
-                    else:
-                        n.append(0)
+            for month in range(10,12):
+                for day in range(1, 32):
+                    for hour in range(24):
+                        k = '2012{0:02d}{1:02d}{2:02d}'.format(month, day, hour)
+                        if k in TS:
+                            n.append(len(TS[k]))
+                        else:
+                            n.append(0)
             return n
             
             
