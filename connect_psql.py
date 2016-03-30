@@ -22,7 +22,7 @@ def retrieve_data_from_db_server():
                 text ~* '.*#\w+.*'; """)
     
     cnt = 0
-    with open("nyc-tweets-12.csv", "w") as fout12, open("nyc-tweets-13.csv", "w") as fout13:            
+    with open("data/nyc-tweets-12.csv", "w") as fout12, open("data/nyc-tweets-13.csv", "w") as fout13:            
         while True:
             res = cur.fetchmany(100)
             if not res:

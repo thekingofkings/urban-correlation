@@ -11,12 +11,13 @@ generate the POI count in each NTA
 
 
 import shapefile
-from shapely.geometry import Polygon, Point, box
+from shapely.geometry import Polygon, Point
 import numpy as np
 
 
 
 def getNYC_NTA():
+    """General function to retrieve all NTAs in NYC and store them into a hashmap"""
     
     fin = "../../dataset/nynta_14c/wgs84"
     

@@ -109,7 +109,7 @@ def plot_nycc_2012_jacob_case(jacobTwt):
     figure(figsize=(15,5))
     plot(ts[120:384], 'b-', linewidth=3)
     
-    traff = pickle.load(open("taxi_tsjacob.pickle", "rU"))
+    traff = pickle.load(open("data/taxi_tsjacob.pickle", "rU"))
     tpick = traff["taxi_pick_"]
     tdrop = traff["taxi_drop_"]
     plot(tpick[120:384], "r-", linewidth=3)
@@ -131,7 +131,7 @@ def plot_nycc_2012_jacob_case(jacobTwt):
     
 
 def merge_taxi_count_into_day():
-    traff = pickle.load(open("taxi_tsjacob.pickle", "rU"))
+    traff = pickle.load(open("data/taxi_tsjacob.pickle", "rU"))
     
     tpick = traff["taxi_pick_"]
     tdrop = traff["taxi_drop_"]
@@ -146,11 +146,11 @@ def merge_taxi_count_into_day():
     return dpick, ddrop
 
 
-if __name__ == '__main__':
-    
+
+def find_tweets_measure_toMatch_traffic():
 
     fname = "nyc-tweets-12"
-    all_tweets = TweetGroup(fname="{0}.csv".format(fname))
+    all_tweets = TweetGroup(fname="data/{0}.csv".format(fname))
     
     all_dmap = all_tweets.split_tweets_byDay()
     
@@ -191,7 +191,7 @@ if __name__ == '__main__':
         tl.set_color('r')
     legend(("Pickup", "Dropoff"), loc=1)
     
-    savefig("tweets-user-count-traffic.pdf")
+    savefig("fig/tweets-user-count-traffic.pdf")
     
     # nyccTwt = r[1]
     # t = jacobTwt.filter_tweets_by_timeWindow("20121019", "20121019235959")
@@ -221,4 +221,11 @@ if __name__ == '__main__':
 #            fout.write(str(twt) + "\n")
             
             
+    
+
+
+
+if __name__ == '__main__':
+    
+    find_tweets_measure_toMatch_traffic()
     
