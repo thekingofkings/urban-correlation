@@ -103,28 +103,46 @@ def plot_nycc_2012_jacob_case(jacobTwt):
     
     # get the time series of tweets with "nycc" related tag
     tagTwt = jacobTwt.filter_tweets_by_hashtag(["#nycc", "#nycomiccon", "#nycc2012"])
-    ts = tagTwt.generate_timeSeries()
+    ts = tagTwt.generate_timeSeries(tstype="users")
 
-    # plot
-    figure(figsize=(15,5))
-    plot(ts[120:384], 'b-', linewidth=3)
-    
     traff = pickle.load(open("data/taxi_tsjacob.pickle", "rU"))
     tpick = traff["taxi_pick_"]
     tdrop = traff["taxi_drop_"]
-    plot(tpick[120:384], "r-", linewidth=3)
-    plot(tdrop[120:384], "g-", linewidth=3)
+
+    # plot
+    figure(figsize=(15,5))
+    ax1 = subplot()
+    
+        
+        
+    
+    l2 = ax1.plot(tpick[120:384], "r-", linewidth=3)
+    l3 = ax1.plot(tdrop[120:384], "b-", linewidth=3)
     axvline(252 - 120, color='black', ls=':', lw=3)
     axvline(276 - 120, color='black', ls=':', lw=3)
     axvline(300 - 120, color='black', ls=':', lw=3)
     axvline(324 - 120, color='black', ls=':', lw=3)
+    ax1.set_ylabel("Count of traffic", fontsize=24)
+
     #title("Jacob center - pickup - dropoff - #nycc")
-    xticks( range(12, 265, 24), ["10/{0:02d}".format(i) for i in range(6, 20, 1)] )
+    xticks( range(12, 265, 24), ["10/{0:02d}".format(i) for i in range(6, 20, 1)], fontsize=20 )
     xlim(0, 264)
-    ylabel("Count of traffic and tweets", fontsize=16)
-    xlabel("Dates in 2012", fontsize=16)
-    legend(("#nycc", "Pickup", "Dropoff"), loc=2)
-    savefig("jacob-small-box.png", format="png")
+    legend(("Pickup", "Dropoff"), loc=2, fontsize=24)
+    
+    
+    ax2 = ax1.twinx()
+    l1 = ax2.plot(ts[120:384], ls="-", color="green", linewidth=4)
+    ax2.set_ylim((0,50))
+    
+    
+    for tl in ax2.get_yticklabels():
+        tl.set_color('g')
+        
+        
+    ax2.set_ylabel("Count of tweets", fontsize=24)
+    xlabel("Dates in 2012", fontsize=24)
+    legend(("#nycc",), loc=1, fontsize=24)
+    savefig("fig/jacob-small-box.pdf")
     return ts
     
     
@@ -255,7 +273,12 @@ def get_userCnt_TS():
 
 if __name__ == '__main__':
     
+    fname = "nyc-tweets-12"
+    all_tweets = TweetGroup(fname="data/{0}.csv".format(fname))
+    jacobTwt = all_tweets.filter_tweets_by_bbox(location['jacob'])
+    plot_nycc_2012_jacob_case(jacobTwt)
+    
 #    find_tweets_measure_toMatch_traffic()
     
-    get_userCnt_TS()
+#    get_userCnt_TS()
     
