@@ -90,14 +90,42 @@ def output_NTA_POI(nta_poi):
 
 
     
+
+
+
+
+def count_POI():
+    """ count number of unqiue users by POI category 
+    
+    Wed Mar 30 2016 8:16pm
+    requested by Fei
+    """
+    
+    pois = np.loadtxt("data/POI.csv", delimiter=",", skiprows=1)
+    
+    cate_poi = {}
+    
+    for row in pois:
+        category = int(row[3])
+        ucnt = int(row[4])
+        if category not in cate_poi:
+            cate_poi[category] = ucnt
+        else:
+            cate_poi[category] += ucnt
+            
+    for k in cate_poi:
+        print k, cate_poi[k]
+
+
+
     
 
 if __name__ == "__main__":
     
-    s = getNYC_NTA()
-    nta_poi = map_POI_to_NTA(s)
-    output_NTA_POI(nta_poi)
+#    s = getNYC_NTA()
+#    nta_poi = map_POI_to_NTA(s)
+#    output_NTA_POI(nta_poi)
     
                 
-    
+    count_POI()
     
