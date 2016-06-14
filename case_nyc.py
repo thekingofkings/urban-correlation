@@ -19,7 +19,8 @@ case 1:
 
 
 
-
+import matplotlib
+matplotlib.use('agg')
 from matplotlib.pyplot import *
 from TweetGroup import TweetGroup
 from pre_processing_function import location
@@ -104,6 +105,7 @@ def plot_nycc_2012_jacob_case(jacobTwt):
     # get the time series of tweets with "nycc" related tag
     tagTwt = jacobTwt.filter_tweets_by_hashtag(["#nycc", "#nycomiccon", "#nycc2012"])
     ts = tagTwt.generate_timeSeries(tstype="users")
+    pickle.dump(ts, open("data/tweets_jacob_nycc.pickle", 'w'))
 
     traff = pickle.load(open("data/taxi_tsjacob.pickle", "rU"))
     tpick = traff["taxi_pick_"]
